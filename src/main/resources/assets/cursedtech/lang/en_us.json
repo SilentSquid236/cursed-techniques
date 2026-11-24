@@ -10,5 +10,6 @@
   "cursedtech.configuration.cinematicCamera": "Cinematic camera shots",
   "cursedtech.configuration.impactFrames": "Impact frames (screen flashes)",
   "cursedtech.configuration.screenShake": "Screen shake",
-  "cursedtech.configuration.showHud": "Show cursed energy HUD"
+  "cursedtech.configuration.showHud": "Show cursed energy HUD",
+  "key.cursedtech.maximum": "Maximum Technique"
 }

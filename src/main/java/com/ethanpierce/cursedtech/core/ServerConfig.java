@@ -9,9 +9,9 @@ public final class ServerConfig {
     private static final ModConfigSpec.Builder B = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.DoubleValue MAX_ENERGY = B
-            .comment("Cursed energy pool size.").defineInRange("maxEnergy", 100.0, 10.0, 10000.0);
+            .comment("Cursed energy pool at Grade 2. Higher grades multiply this.").defineInRange("maxEnergy", 100.0, 10.0, 10000.0);
     public static final ModConfigSpec.DoubleValue REGEN_PER_SECOND = B
-            .comment("Cursed energy regained per second.").defineInRange("regenPerSecond", 3.0, 0.0, 1000.0);
+            .comment("Cursed energy regained per second at Grade 2. Higher grades multiply this.").defineInRange("regenPerSecond", 3.0, 0.0, 1000.0);
     public static final ModConfigSpec.DoubleValue DAMAGE_MULTIPLIER = B
             .comment("Multiplies all technique and domain damage. Armor still applies.")
             .defineInRange("damageMultiplier", 1.0, 0.0, 20.0);
@@ -37,6 +37,37 @@ public final class ServerConfig {
     public static final ModConfigSpec.DoubleValue BLACK_FLASH_ZONE_MULTIPLIER = B
             .comment("Black Flash chance multiplier for 10s after landing one.")
             .defineInRange("blackFlashZoneMultiplier", 2.5, 1.0, 20.0);
+
+    // ------------------------------------------------------------ progression
+
+    static { B.push("progression"); }
+
+    public static final ModConfigSpec.DoubleValue SPECIAL_SPAWN_CHANCE = B
+            .comment("Chance a new player awakens as a Special Grade with a rare innate technique (Unbounded / Calamity Sovereign).")
+            .defineInRange("specialSpawnChance", 0.01, 0.0, 1.0);
+    public static final ModConfigSpec.DoubleValue GRADE1_SPAWN_CHANCE = B
+            .comment("Chance a new player awakens directly at Grade 1. Everyone else starts at Grade 2.")
+            .defineInRange("grade1SpawnChance", 0.04, 0.0, 1.0);
+    public static final ModConfigSpec.DoubleValue XP_MULTIPLIER = B
+            .comment("Multiplies all grade XP gained. Raise to make leveling faster.")
+            .defineInRange("xpMultiplier", 1.0, 0.0, 100.0);
+
+    public static final ModConfigSpec.IntValue SEMI_GRADE1_XP = B
+            .comment("Total XP for Semi-Grade 1.").defineInRange("semiGrade1Xp", 2500, 0, Integer.MAX_VALUE);
+    public static final ModConfigSpec.IntValue GRADE1_XP = B
+            .comment("Total XP for Grade 1 (unlocks Domain Expansion).").defineInRange("grade1Xp", 8000, 0, Integer.MAX_VALUE);
+    public static final ModConfigSpec.IntValue GRADE1_BLACK_FLASHES = B
+            .comment("Black Flashes landed needed for Grade 1.").defineInRange("grade1BlackFlashes", 3, 0, 1000);
+    public static final ModConfigSpec.IntValue SPECIAL_XP = B
+            .comment("Total XP for Special Grade (unlocks Maximum and Reverse Cursed Technique).")
+            .defineInRange("specialXp", 30000, 0, Integer.MAX_VALUE);
+    public static final ModConfigSpec.IntValue SPECIAL_BLACK_FLASHES = B
+            .comment("Black Flashes landed needed for Special Grade.").defineInRange("specialBlackFlashes", 12, 0, 1000);
+    public static final ModConfigSpec.IntValue SPECIAL_BOSS_KILLS = B
+            .comment("Boss kills (mobs with 150+ max health) needed for Special Grade.")
+            .defineInRange("specialBossKills", 2, 0, 1000);
+
+    static { B.pop(); }
 
     public static final ModConfigSpec SPEC = B.build();
 }

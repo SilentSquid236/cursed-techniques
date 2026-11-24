@@ -1,5 +1,6 @@
 package com.ethanpierce.cursedtech.client;
 
+import com.ethanpierce.cursedtech.core.Grade;
 import com.ethanpierce.cursedtech.core.Technique;
 import net.minecraft.world.phys.Vec3;
 
@@ -13,9 +14,11 @@ public final class ClientState {
     public static long ticks;
 
     public static Technique technique = Technique.NONE;
+    public static Grade grade = Grade.GRADE_2;
+    public static long xp, xpFloor, xpNext;
     public static float energy, maxEnergy = 100;
-    public static int[] cdLeft = new int[3];
-    public static int[] cdMax = new int[3];
+    public static int[] cdLeft = new int[4];
+    public static int[] cdMax = new int[4];
     public static int burnoutLeft;
     public static boolean inZone;
     /** Client tick the last sync arrived, to count cooldowns down smoothly between syncs. */
@@ -30,8 +33,9 @@ public final class ClientState {
     public static void reset() {
         technique = Technique.NONE;
         energy = 0;
-        cdLeft = new int[3];
-        cdMax = new int[3];
+        cdLeft = new int[4];
+        cdMax = new int[4];
+        grade = Grade.GRADE_2;
         burnoutLeft = 0;
         DOMAINS.clear();
     }

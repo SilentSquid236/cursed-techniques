@@ -1,6 +1,7 @@
 package com.ethanpierce.cursedtech.client;
 
 import com.ethanpierce.cursedtech.CursedTech;
+import com.ethanpierce.cursedtech.core.Grade;
 import com.ethanpierce.cursedtech.core.Technique;
 import com.ethanpierce.cursedtech.network.ModNetwork;
 import net.minecraft.client.DeltaTracker;
@@ -27,11 +28,15 @@ public final class Hud {
         Technique t = ClientState.technique;
         if (t == Technique.NONE) return;
         Font font = mc.font;
+        Grade grade = ClientState.grade;
+        int rows = grade == Grade.SPECIAL ? 4 : grade.atLeast(Grade.GRADE_1) ? 3 : 2;
         int x = 8;
-        int y = g.guiHeight() - 62;
+        int y = g.guiHeight() - 46 - rows * 10;
 
         g.drawString(font, t.displayName, x, y, t.color, true);
-        if (ClientState.inZone) g.drawString(font, " ⚡", x + font.width(t.displayName), y, 0xFFD01020, true);
+        int gx = x + font.width(t.displayName) + 6;
+        g.drawString(font, grade.displayName, gx, y, 0xFF000000 | grade.color, true);
+        if (ClientState.inZone) g.drawString(font, " ⚡", gx + font.width(grade.displayName), y, 0xFFD01020, true);
 
         // Energy bar
         int w = 100, by = y + 11;
@@ -42,14 +47,22 @@ public final class Hud {
         String ce = String.format("%.0f", ClientState.energy);
         g.drawString(font, ce, x + w + 4, by - 2, 0xFFCCCCCC, true);
 
+        // Grade XP toward the next grade.
+        if (ClientState.xpNext > 0) {
+            float xf = Mth.clamp((ClientState.xp - ClientState.xpFloor)
+                    / (float) Math.max(1, ClientState.xpNext - ClientState.xpFloor), 0, 1);
+            g.fill(x, by + 5, x + w, by + 6, 0x60000000);
+            g.fill(x, by + 5, x + (int) (w * xf), by + 6, 0xFF000000 | grade.next().color);
+        }
+
         if (ClientState.burnoutLeft > 0) {
             int left = Math.max(0, ClientState.burnoutLeft - (int) (ClientState.ticks - ClientState.syncTick));
-            g.drawString(font, "BURNOUT " + (left / 20 + 1) + "s", x, by + 8, 0xFFDD3333, true);
+            g.drawString(font, "BURNOUT " + (left / 20 + 1) + "s", x, by + 9, 0xFFDD3333, true);
             return;
         }
 
-        for (int i = 0; i < 3; i++) {
-            int ly = by + 8 + i * 10;
+        for (int i = 0; i < rows; i++) {
+            int ly = by + 9 + i * 10;
             int cd = ClientState.cooldownLeft(i);
             String key = ClientEvents.KEYS[i].getTranslatedKeyMessage().getString();
             String name = i == 2 ? "Domain: " + t.domainName() : t.abilityName(i);

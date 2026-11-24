@@ -2,6 +2,7 @@ package com.ethanpierce.cursedtech.ability;
 
 import com.ethanpierce.cursedtech.core.CursedData;
 import com.ethanpierce.cursedtech.core.Fx;
+import com.ethanpierce.cursedtech.core.Grade;
 import com.ethanpierce.cursedtech.core.ModRegistries;
 import com.ethanpierce.cursedtech.core.Tasks;
 import com.ethanpierce.cursedtech.core.Technique;
@@ -31,11 +32,19 @@ public final class Abilities {
     private Abilities() {}
 
     public static void use(ServerPlayer p, int slot) {
-        if (slot < 0 || slot > 2 || p.isSpectator() || !p.isAlive()) return;
+        if (slot < 0 || slot > 3 || p.isSpectator() || !p.isAlive()) return;
         CursedData d = p.getData(ModRegistries.CURSED);
         Technique t = d.technique;
         if (t == Technique.NONE) {
             bar(p, "You have no innate technique.", ChatFormatting.GRAY);
+            return;
+        }
+        if (slot == 2 && !d.grade.atLeast(Grade.GRADE_1)) {
+            bar(p, "Domain Expansion unlocks at Grade 1", ChatFormatting.GRAY);
+            return;
+        }
+        if (slot == 3 && d.grade != Grade.SPECIAL) {
+            if (d.grade.atLeast(Grade.GRADE_1)) bar(p, "Maximum technique unlocks at Special Grade", ChatFormatting.GRAY);
             return;
         }
         long now = p.serverLevel().getGameTime();
@@ -53,13 +62,14 @@ public final class Abilities {
         boolean ok = switch (slot) {
             case 0 -> ability1(p, t);
             case 1 -> ability2(p, t);
-            default -> DomainManager.open(p, t);
+            case 2 -> DomainManager.open(p, t);
+            default -> Maximums.use(p, t);
         };
         if (!ok) return;
 
         if (!p.isCreative()) d.energy -= cost;
         int cd = t.cooldown(slot);
-        if (slot < 2 && DomainManager.isInOwnDomain(p)) cd /= 2; // techniques flow inside your own domain
+        if (slot != 2 && DomainManager.isInOwnDomain(p)) cd /= 2; // techniques flow inside your own domain
         d.cooldownUntil[slot] = now + cd;
         d.cooldownMax[slot] = cd;
     }
@@ -69,7 +79,7 @@ public final class Abilities {
     }
 
     private static boolean ability1(ServerPlayer p, Technique t) {
-        return switch (t) {
+        return switch (t.base()) {
             case VORTEX -> collapsePoint(p, t);
             case BLADE -> cleave(p, t);
             case FLAME -> emberShot(p, t);
@@ -78,7 +88,7 @@ public final class Abilities {
     }
 
     private static boolean ability2(ServerPlayer p, Technique t) {
-        return switch (t) {
+        return switch (t.base()) {
             case VORTEX -> repulsionBurst(p, t);
             case BLADE -> dismantleStorm(p, t);
             case FLAME -> eruption(p, t);

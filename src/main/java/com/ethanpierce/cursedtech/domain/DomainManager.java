@@ -3,6 +3,7 @@ package com.ethanpierce.cursedtech.domain;
 import com.ethanpierce.cursedtech.core.CursedData;
 import com.ethanpierce.cursedtech.core.Fx;
 import com.ethanpierce.cursedtech.core.ModRegistries;
+import com.ethanpierce.cursedtech.core.Progression;
 import com.ethanpierce.cursedtech.core.ServerConfig;
 import com.ethanpierce.cursedtech.core.Technique;
 import com.ethanpierce.cursedtech.network.ModNetwork;
@@ -56,16 +57,20 @@ public final class DomainManager {
         final int lifetime;
         final List<BlockPos> shell;
         final List<BlockPos> placed = new ArrayList<>();
+        /** Open domains (Calamity) have no barrier: bigger, but targets can run. */
+        final boolean open;
         int age;
+        boolean caught;
 
         Domain(ServerPlayer p, Technique tech, int radius, int lifetime) {
             this.caster = p.getUUID();
             this.level = p.serverLevel();
             this.center = p.position();
             this.tech = tech;
+            this.open = tech == Technique.CALAMITY;
             this.radius = radius;
             this.lifetime = lifetime;
-            this.shell = buildShell();
+            this.shell = open ? List.of() : buildShell();
         }
 
         private List<BlockPos> buildShell() {
@@ -92,6 +97,15 @@ public final class DomainManager {
 
     private static final Map<UUID, Domain> ACTIVE = new HashMap<>();
 
+    /** True if p stands inside a domain cast by someone else (sure-hit pierces Infinity). */
+    public static boolean isInEnemyDomain(ServerPlayer p) {
+        for (Domain d : ACTIVE.values()) {
+            if (!d.caster.equals(p.getUUID()) && d.level == p.serverLevel() && d.age >= BUILD_TICKS
+                    && d.contains(p.position())) return true;
+        }
+        return false;
+    }
+
     public static boolean isInOwnDomain(ServerPlayer p) {
         Domain d = ACTIVE.get(p.getUUID());
         return d != null && d.contains(p.position());
@@ -101,6 +115,8 @@ public final class DomainManager {
         if (ACTIVE.containsKey(p.getUUID())) return false;
         ServerLevel level = p.serverLevel();
         int radius = ServerConfig.DOMAIN_RADIUS.get();
+        if (tech == Technique.UNBOUNDED) radius += 2;
+        if (tech == Technique.CALAMITY) radius = Math.round(radius * 1.5f);
         int lifetime = BUILD_TICKS + ServerConfig.DOMAIN_DURATION_SECONDS.get() * 20;
         CursedData mine = p.getData(ModRegistries.CURSED);
 
@@ -171,7 +187,7 @@ public final class DomainManager {
         ServerLevel l = d.level;
 
         // Build the barrier from the ground up.
-        if (d.age < BUILD_TICKS && ServerConfig.DOMAIN_BARRIER.get()) {
+        if (d.age < BUILD_TICKS && !d.open && ServerConfig.DOMAIN_BARRIER.get()) {
             int per = (int) Math.ceil(d.shell.size() / (double) BUILD_TICKS);
             int from = d.age * per;
             for (int i = from; i < Math.min(d.shell.size(), from + per); i++) {
@@ -203,12 +219,18 @@ public final class DomainManager {
 
         int sinceClose = d.age - BUILD_TICKS;
         List<LivingEntity> inside = Fx.around(caster, d.center, d.radius - 0.5);
+        if (!d.caught && !inside.isEmpty()) {
+            d.caught = true;
+            Progression.addXp(caster, caster.getData(ModRegistries.CURSED), 20);
+        }
 
-        switch (d.tech) {
+        switch (d.tech.base()) {
             case VORTEX -> {
                 // Event Horizon: everything inside is caught by infinite pull. Frozen briefly, then crawling.
+                // Unbounded Void holds them twice as long.
+                int freeze = d.tech == Technique.UNBOUNDED ? 100 : 60;
                 for (LivingEntity e : inside) {
-                    boolean frozen = sinceClose < 60;
+                    boolean frozen = sinceClose < freeze;
                     e.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 30, frozen ? 6 : 2, false, false));
                     e.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 30, 0, false, false));
                     e.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 30, 2, false, false));

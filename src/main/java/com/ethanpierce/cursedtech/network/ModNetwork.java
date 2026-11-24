@@ -41,24 +41,30 @@ public final class ModNetwork {
     // ---------------------------------------------------------------- S2C
 
     /** Player HUD state. Cooldowns are remaining ticks. */
-    public record SyncPayload(String technique, float energy, float maxEnergy,
-                              int[] cdLeft, int[] cdMax, int burnoutLeft, boolean inZone) implements CustomPacketPayload {
+    public record SyncPayload(String technique, String grade, float energy, float maxEnergy,
+                              int[] cdLeft, int[] cdMax, int burnoutLeft, boolean inZone,
+                              long xp, long xpFloor, long xpNext) implements CustomPacketPayload {
         public static final Type<SyncPayload> TYPE = new Type<>(CursedTech.id("sync"));
         public static final StreamCodec<FriendlyByteBuf, SyncPayload> CODEC = StreamCodec.ofMember(SyncPayload::write, SyncPayload::read);
 
         private void write(FriendlyByteBuf b) {
             b.writeUtf(technique);
+            b.writeUtf(grade);
             b.writeFloat(energy);
             b.writeFloat(maxEnergy);
             b.writeVarIntArray(cdLeft);
             b.writeVarIntArray(cdMax);
             b.writeVarInt(burnoutLeft);
             b.writeBoolean(inZone);
+            b.writeVarLong(xp);
+            b.writeVarLong(xpFloor);
+            b.writeVarLong(xpNext);
         }
 
         private static SyncPayload read(FriendlyByteBuf b) {
-            return new SyncPayload(b.readUtf(), b.readFloat(), b.readFloat(),
-                    b.readVarIntArray(), b.readVarIntArray(), b.readVarInt(), b.readBoolean());
+            return new SyncPayload(b.readUtf(), b.readUtf(), b.readFloat(), b.readFloat(),
+                    b.readVarIntArray(), b.readVarIntArray(), b.readVarInt(), b.readBoolean(),
+                    b.readVarLong(), b.readVarLong(), b.readVarLong());
         }
 
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }

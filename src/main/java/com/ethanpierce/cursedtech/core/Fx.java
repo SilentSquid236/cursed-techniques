@@ -31,9 +31,12 @@ public final class Fx {
                 .getHolderOrThrow(ModRegistries.TECHNIQUE_DAMAGE), p);
     }
 
+    /** Technique damage, scaled by config, the caster's grade and their technique's power. */
     public static boolean hit(ServerPlayer p, LivingEntity target, float amount) {
+        CursedData d = p.getData(ModRegistries.CURSED);
         target.invulnerableTime = 0;
-        return target.hurt(source(p), amount * ServerConfig.DAMAGE_MULTIPLIER.get().floatValue());
+        float scaled = amount * ServerConfig.DAMAGE_MULTIPLIER.get().floatValue() * d.grade.damageMult * d.technique.power();
+        return target.hurt(source(p), scaled);
     }
 
     public static void push(Entity e, Vec3 v) {

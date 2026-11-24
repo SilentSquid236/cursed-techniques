@@ -1,5 +1,6 @@
 package com.ethanpierce.cursedtech.client;
 
+import com.ethanpierce.cursedtech.core.Grade;
 import com.ethanpierce.cursedtech.core.Technique;
 import com.ethanpierce.cursedtech.network.ModNetwork;
 import net.minecraft.world.phys.Vec3;
@@ -9,10 +10,14 @@ public final class ClientPayloads {
 
     public static void sync(ModNetwork.SyncPayload p) {
         ClientState.technique = Technique.byId(p.technique());
+        ClientState.grade = Grade.byId(p.grade());
+        ClientState.xp = p.xp();
+        ClientState.xpFloor = p.xpFloor();
+        ClientState.xpNext = p.xpNext();
         ClientState.energy = p.energy();
         ClientState.maxEnergy = p.maxEnergy();
-        ClientState.cdLeft = p.cdLeft().length == 3 ? p.cdLeft() : new int[3];
-        ClientState.cdMax = p.cdMax().length == 3 ? p.cdMax() : new int[3];
+        ClientState.cdLeft = p.cdLeft().length == 4 ? p.cdLeft() : new int[4];
+        ClientState.cdMax = p.cdMax().length == 4 ? p.cdMax() : new int[4];
         ClientState.burnoutLeft = p.burnoutLeft();
         ClientState.inZone = p.inZone();
         ClientState.syncTick = ClientState.ticks;

@@ -22,6 +22,7 @@ public final class ClientEvents {
             new KeyMapping("key.cursedtech.ability1", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, CATEGORY),
             new KeyMapping("key.cursedtech.ability2", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_X, CATEGORY),
             new KeyMapping("key.cursedtech.domain", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, CATEGORY),
+            new KeyMapping("key.cursedtech.maximum", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, CATEGORY),
     };
 
     public static void registerKeys(RegisterKeyMappingsEvent e) {

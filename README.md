@@ -4,15 +4,35 @@ A NeoForge 1.21.1 mod inspired by *Jujutsu Kaisen*: cursed energy, innate techni
 
 The centerpiece of the **[Cursed Arts](https://github.com/SilentSquid236/cursed-arts)** modpack.
 
+## Grades
+
+Every player awakens on first join with a technique and a grade. Most start at **Grade 2**; a few are born stronger.
+
+| Grade | How you get it | Unlocks | Stats |
+|---|---|---|---|
+| **Grade 2** | ~95% of new players | Abilities 1 and 2 | 100 CE, base damage |
+| **Semi-Grade 1** | 2,500 XP | Bigger reserves | 130 CE, +10% damage |
+| **Grade 1** | ~4% of new players, or 8,000 XP + 3 Black Flashes | Domain Expansion | 170 CE, +25% damage |
+| **Special Grade** | ~1% of new players, or 30,000 XP + 12 Black Flashes + 2 boss kills | Maximum technique, Reverse Cursed Technique | 250 CE, +50% damage |
+
+**Grade XP** comes from fights: hostile kills (about max health / 4), bosses (max health x 2), player kills (40, once per victim per 10 min), Black Flashes (30) and domains that catch someone (20). Farm animals and villagers give nothing. Promotions are announced to the server. Check progress with `/cursed info`.
+
+**Reverse Cursed Technique** (Special Grade): you slowly heal by burning cursed energy.
+
+### Rare innate techniques
+
+The ~1% of players who awaken as a Special Grade receive a technique nobody else can get:
+
+- **Unbounded**: Collapse Point and Repulsion Burst at higher power, plus passive **Infinity**, which blocks 60% of incoming damage while you have energy (sure-hits inside an enemy domain pierce it). Domain: **Unbounded Void** (larger, freezes for 5s). Maximum: **Hollow Annihilation**.
+- **Calamity Sovereign**: Cleave and Dismantle Storm at higher power. Domain: **Shrine of Calamity**, an *open* domain with no barrier but 1.5x the reach. Maximum: **Divine Flame**.
+
 ## Techniques
 
-Every player awakens one technique at random on first join.
-
-| Technique | Ability 1 (Z) | Ability 2 (X) | Domain (V) |
-|---|---|---|---|
-| **Vortex Manipulation** | Collapse Point: a pull point that drags enemies in, then implodes | Repulsion Burst: shockwave that blasts everyone away | **Event Horizon**: everything inside is frozen for 3s, then crawls |
-| **Edge Weaving** | Cleave: a 14-block cutting line | Dismantle Storm: 3 waves of slashes in a cone | **Sanctum of a Thousand Edges**: everything inside is cut every second |
-| **Ember Calling** | Ember Shot: fast fire bolt (no block griefing) | Eruption: telegraphed eruption under your target | **Coffin of Embers**: constant burning; caster is fire-immune |
+| Technique | Ability 1 (Z) | Ability 2 (X) | Domain (V, Grade 1+) | Maximum (G, Special Grade) |
+|---|---|---|---|---|
+| **Vortex Manipulation** | Collapse Point: a pull point that drags enemies in, then implodes | Repulsion Burst: shockwave that blasts everyone away | **Event Horizon**: everything inside is frozen for 3s, then crawls | Gravity Well |
+| **Edge Weaving** | Cleave: a 14-block cutting line | Dismantle Storm: 3 waves of slashes in a cone | **Sanctum of a Thousand Edges**: everything inside is cut every second | World Rend |
+| **Ember Calling** | Ember Shot: fast fire bolt (no block griefing) | Eruption: telegraphed eruption under your target | **Coffin of Embers**: constant burning; caster is fire-immune | Meteor |
 
 - **Cursed energy** regenerates over ~30s. Abilities cost energy and have cooldowns (halved inside your own domain).
 - **Domain Expansion** raises a temporary barrier dome (only replaces air, removed afterwards). Overlapping domains **clash**; one shatters. Casting leaves your technique **burnt out** for 10s.
@@ -32,8 +52,10 @@ Every player awakens one technique at random on first join.
 | `/cursed set <players> <vortex\|blade\|flame\|none>` | op |
 | `/cursed reroll <players>` | op |
 | `/cursed refill <players> [amount]` | op |
+| `/cursed grade <players> <grade_2\|semi_grade_1\|grade_1\|special>` | op |
+| `/cursed xp <players> <amount>` | op |
 
-Balance values (damage multiplier, domain radius/duration/cooldown, Black Flash chance, ...) live in `world/serverconfig/cursedtech-server.toml`.
+Balance values (damage multiplier, domain radius/duration/cooldown, Black Flash chance, spawn odds, XP thresholds, ...) live in `world/serverconfig/cursedtech-server.toml`.
 
 ## Building
 

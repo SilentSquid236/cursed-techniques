@@ -53,17 +53,7 @@ public final class ServerEvents {
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer p)) return;
         CursedData d = p.getData(ModRegistries.CURSED);
-        if (!d.assigned) {
-            Technique[] pool = Technique.playable();
-            d.technique = pool[p.getRandom().nextInt(pool.length)];
-            d.assigned = true;
-            d.energy = maxEnergy();
-            p.sendSystemMessage(Component.literal("Your innate technique has awakened: ").withStyle(ChatFormatting.GRAY)
-                    .append(Component.literal(d.technique.displayName)
-                            .withStyle(Style.EMPTY.withColor(d.technique.color).withBold(true))));
-            p.sendSystemMessage(Component.literal("Z / X: abilities   V: Domain Expansion   (rebind in Controls)")
-                    .withStyle(ChatFormatting.DARK_GRAY));
-        }
+        if (!d.assigned) Progression.awaken(p, d);
     }
 
     @SubscribeEvent
@@ -75,6 +65,7 @@ public final class ServerEvents {
     @SubscribeEvent
     public static void onDeath(LivingDeathEvent e) {
         if (e.getEntity() instanceof ServerPlayer p) DomainManager.endFor(p.getUUID());
+        if (e.getSource().getEntity() instanceof ServerPlayer killer) Progression.onKill(killer, e.getEntity());
     }
 
     @SubscribeEvent
@@ -93,22 +84,29 @@ public final class ServerEvents {
     public static void onPlayerTick(PlayerTickEvent.Post e) {
         if (!(e.getEntity() instanceof ServerPlayer p)) return;
         CursedData d = p.getData(ModRegistries.CURSED);
-        float max = maxEnergy();
-        if (d.energy < max) d.energy = Math.min(max, d.energy + ServerConfig.REGEN_PER_SECOND.get().floatValue() / 20f);
+        float max = d.maxEnergy();
+        if (d.energy < max) d.energy = Math.min(max, d.energy + d.regenPerTick());
         if (d.energy > max) d.energy = max;
+
+        // Reverse Cursed Technique: Special Grades heal by burning cursed energy.
+        if (d.grade == Grade.SPECIAL && p.tickCount % 20 == 0 && p.isAlive()
+                && p.getHealth() < p.getMaxHealth() && d.energy >= 25
+                && d.burnoutUntil <= p.serverLevel().getGameTime()) {
+            p.heal(2.0F);
+            d.energy -= 6;
+            Fx.burst(p.serverLevel(), Fx.dust(0xE8FFF0, 0.9F), p.position().add(0, 1, 0), 6, 0.35, 0);
+        }
         if (p.tickCount % 4 == 0) sync(p, d);
     }
 
     public static void sync(ServerPlayer p, CursedData d) {
         long now = p.serverLevel().getGameTime();
-        int[] left = new int[3];
-        for (int i = 0; i < 3; i++) left[i] = (int) Math.max(0, d.cooldownUntil[i] - now);
-        PacketDistributor.sendToPlayer(p, new ModNetwork.SyncPayload(d.technique.id, d.energy, maxEnergy(), left,
-                Arrays.copyOf(d.cooldownMax, 3), (int) Math.max(0, d.burnoutUntil - now), d.zoneUntil > now));
-    }
-
-    private static float maxEnergy() {
-        return ServerConfig.MAX_ENERGY.get().floatValue();
+        int[] left = new int[CursedData.SLOTS];
+        for (int i = 0; i < CursedData.SLOTS; i++) left[i] = (int) Math.max(0, d.cooldownUntil[i] - now);
+        Grade next = d.grade.next();
+        PacketDistributor.sendToPlayer(p, new ModNetwork.SyncPayload(d.technique.id, d.grade.id, d.energy, d.maxEnergy(),
+                left, Arrays.copyOf(d.cooldownMax, CursedData.SLOTS), (int) Math.max(0, d.burnoutUntil - now),
+                d.zoneUntil > now, d.xp, next == null ? 0 : Progression.xpFor(d.grade), Progression.nextXp(d)));
     }
 
     // ---------------------------------------------------------- Black Flash
@@ -126,6 +124,7 @@ public final class ServerEvents {
 
     @SubscribeEvent
     public static void onIncomingDamage(LivingIncomingDamageEvent e) {
+        infinity(e);
         if (!(e.getSource().getDirectEntity() instanceof ServerPlayer p) || e.getSource().getEntity() != p) return;
         if (!e.getSource().is(DamageTypes.PLAYER_ATTACK)) return;
         Long tick = PENDING_FLASH.remove(p.getUUID());
@@ -136,6 +135,8 @@ public final class ServerEvents {
         CursedData d = p.getData(ModRegistries.CURSED);
         d.energy -= 10;
         d.zoneUntil = l.getGameTime() + 200;
+        d.blackFlashes++;
+        Progression.addXp(p, d, 30);
 
         // Big but not one-shot: roughly 1.8x a full swing plus a flat bonus.
         e.setAmount(e.getAmount() * 1.8F + 2.0F);
@@ -156,6 +157,24 @@ public final class ServerEvents {
         Fx.cinematic(p, ModNetwork.CinematicPayload.BLACK_FLASH, p, target, 16, "BLACK FLASH", 0xD01020);
     }
 
+    /**
+     * Unbounded's passive: attacks slow to nothing before they reach you.
+     * Blocks 60% of damage from any attacker while you have energy; each hit
+     * stopped costs energy. Sure-hit damage inside an enemy domain pierces it.
+     */
+    private static void infinity(LivingIncomingDamageEvent e) {
+        if (!(e.getEntity() instanceof ServerPlayer p)) return;
+        CursedData d = p.getData(ModRegistries.CURSED);
+        if (d.technique != Technique.UNBOUNDED || d.energy < 10) return;
+        if (e.getSource().getEntity() == null || e.getSource().getEntity() == p) return;
+        if (d.burnoutUntil > p.serverLevel().getGameTime()) return;
+        if (e.getSource().is(ModRegistries.TECHNIQUE_DAMAGE) && DomainManager.isInEnemyDomain(p)) return;
+        float blocked = e.getAmount() * 0.6F;
+        e.setAmount(e.getAmount() - blocked);
+        d.energy = Math.max(0, d.energy - blocked * 1.5F);
+        Fx.sphere(p.serverLevel(), Fx.dust(0xC8B8FF, 0.8F), p.position().add(0, 1, 0), 1.1, 12);
+    }
+
     // ------------------------------------------------------------- commands
 
     @SubscribeEvent
@@ -168,6 +187,16 @@ public final class ServerEvents {
                                         .suggests((c, b) -> SharedSuggestionProvider.suggest(
                                                 Arrays.stream(Technique.values()).map(t -> t.id), b))
                                         .executes(ServerEvents::set))))
+                .then(Commands.literal("grade").requires(s -> s.hasPermission(2))
+                        .then(Commands.argument("targets", EntityArgument.players())
+                                .then(Commands.argument("grade", StringArgumentType.word())
+                                        .suggests((c, b) -> SharedSuggestionProvider.suggest(
+                                                Arrays.stream(Grade.values()).map(g -> g.id), b))
+                                        .executes(ServerEvents::grade))))
+                .then(Commands.literal("xp").requires(s -> s.hasPermission(2))
+                        .then(Commands.argument("targets", EntityArgument.players())
+                                .then(Commands.argument("amount", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0))
+                                        .executes(ServerEvents::xp))))
                 .then(Commands.literal("reroll").requires(s -> s.hasPermission(2))
                         .then(Commands.argument("targets", EntityArgument.players()).executes(ServerEvents::reroll)))
                 .then(Commands.literal("refill").requires(s -> s.hasPermission(2))
@@ -183,11 +212,18 @@ public final class ServerEvents {
         Technique t = d.technique;
         c.getSource().sendSuccess(() -> Component.literal(t.displayName)
                 .withStyle(Style.EMPTY.withColor(t.color).withBold(true))
-                .append(Component.literal(String.format("  %.0f/%.0f CE", d.energy, maxEnergy()))
+                .append(Component.literal("  " + d.grade.displayName).withStyle(Style.EMPTY.withColor(d.grade.color)))
+                .append(Component.literal(String.format("  %.0f/%.0f CE", d.energy, d.maxEnergy()))
                         .withStyle(ChatFormatting.GRAY)), false);
         if (t != Technique.NONE) {
-            c.getSource().sendSuccess(() -> Component.literal("[1] " + t.abilityName(0) + "   [2] " + t.abilityName(1)
-                    + "   [Domain] " + t.domainName()).withStyle(ChatFormatting.GRAY), false);
+            String kit = "[Z] " + t.abilityName(0) + "   [X] " + t.abilityName(1)
+                    + "   [V] " + t.domainName() + (d.grade.atLeast(Grade.GRADE_1) ? "" : " (Grade 1)")
+                    + "   [G] " + t.abilityName(3) + (d.grade == Grade.SPECIAL ? "" : " (Special Grade)");
+            c.getSource().sendSuccess(() -> Component.literal(kit).withStyle(ChatFormatting.GRAY), false);
+            c.getSource().sendSuccess(() -> Component.literal(Progression.requirements(d))
+                    .withStyle(ChatFormatting.DARK_AQUA), false);
+            c.getSource().sendSuccess(() -> Component.literal("Black Flashes landed: " + d.blackFlashes
+                    + "   Bosses exorcised: " + d.bossKills).withStyle(ChatFormatting.DARK_GRAY), false);
         }
         return 1;
     }
@@ -212,11 +248,36 @@ public final class ServerEvents {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(c, "targets");
         for (ServerPlayer p : targets) {
             CursedData d = p.getData(ModRegistries.CURSED);
-            d.energy = Math.min(maxEnergy(), amount);
+            d.energy = Math.min(d.maxEnergy(), amount);
             Arrays.fill(d.cooldownUntil, 0);
             d.burnoutUntil = 0;
         }
         c.getSource().sendSuccess(() -> Component.literal("Refilled " + targets.size() + " player(s)"), true);
+        return targets.size();
+    }
+
+    private static int grade(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(c, "targets");
+        Grade g = Grade.byId(StringArgumentType.getString(c, "grade"));
+        for (ServerPlayer p : targets) {
+            CursedData d = p.getData(ModRegistries.CURSED);
+            Progression.setGrade(p, d, g);
+            p.sendSystemMessage(Component.literal("You are now ").withStyle(ChatFormatting.GRAY)
+                    .append(Component.literal(g.displayName).withStyle(Style.EMPTY.withColor(g.color).withBold(true))));
+        }
+        c.getSource().sendSuccess(() -> Component.literal("Set " + targets.size() + " player(s) to " + g.displayName), true);
+        return targets.size();
+    }
+
+    private static int xp(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(c, "targets");
+        int amount = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "amount");
+        for (ServerPlayer p : targets) {
+            CursedData d = p.getData(ModRegistries.CURSED);
+            d.xp += amount;
+            Progression.tryPromote(p, d);
+        }
+        c.getSource().sendSuccess(() -> Component.literal("Gave " + amount + " grade XP to " + targets.size() + " player(s)"), true);
         return targets.size();
     }
 
