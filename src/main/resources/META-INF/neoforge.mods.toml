@@ -1,0 +1,29 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+
+[[mods]]
+modId = "cursedtech"
+version = "${file.jarVersion}"
+displayName = "Cursed Techniques"
+authors = "Ethan Pierce"
+description = '''
+Cursed energy, innate techniques, Domain Expansions and Black Flash, with cinematic third-person shots and impact frames.
+'''
+
+[[mixins]]
+config = "cursedtech.mixins.json"
+
+[[dependencies.cursedtech]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.cursedtech]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.21.2)"
+ordering = "NONE"
+side = "BOTH"

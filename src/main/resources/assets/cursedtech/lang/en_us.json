@@ -1,0 +1,14 @@
+{
+  "block.cursedtech.domain_barrier": "Domain Barrier",
+  "key.categories.cursedtech": "Cursed Techniques",
+  "key.cursedtech.ability1": "Technique: Ability 1",
+  "key.cursedtech.ability2": "Technique: Ability 2",
+  "key.cursedtech.domain": "Domain Expansion",
+  "death.attack.cursedtech.technique": "%1$s was exorcised by %2$s",
+  "death.attack.cursedtech.technique.player": "%1$s was exorcised while fighting %2$s",
+  "cursedtech.configuration.title": "Cursed Techniques",
+  "cursedtech.configuration.cinematicCamera": "Cinematic camera shots",
+  "cursedtech.configuration.impactFrames": "Impact frames (screen flashes)",
+  "cursedtech.configuration.screenShake": "Screen shake",
+  "cursedtech.configuration.showHud": "Show cursed energy HUD"
+}

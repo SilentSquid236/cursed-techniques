@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.ethanpierce.cursedtech.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "client": [
+    "CameraMixin",
+    "GameRendererInvoker"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
