@@ -37,6 +37,7 @@ public final class Maximums {
             default -> false;
         };
         if (ok) {
+            com.ethanpierce.cursedtech.core.Advancements.award(p, "maximum");
             Fx.cinematic(p, ModNetwork.CinematicPayload.FINISHER, p, null, 22, t.abilityName(3), t.color);
             Fx.impact(p, 0, t.color, t.abilityName(3).replace("Maximum: ", "").toUpperCase());
         }

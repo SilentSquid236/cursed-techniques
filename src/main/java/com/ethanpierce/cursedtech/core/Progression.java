@@ -91,6 +91,7 @@ public final class Progression {
         float hp = victim.getMaxHealth();
         if (hp >= BOSS_HEALTH) {
             d.bossKills++;
+            Advancements.award(killer, "boss");
             killer.sendSystemMessage(Component.literal("Boss exorcised: " + victim.getName().getString())
                     .withStyle(ChatFormatting.GOLD));
             addXp(killer, d, (long) (hp * 2));
@@ -160,6 +161,8 @@ public final class Progression {
 
     private static void announce(ServerPlayer p, CursedData d) {
         Grade g = d.grade;
+        String adv = Advancements.forGrade(g);
+        if (adv != null) Advancements.award(p, adv);
         Component msg = Component.literal(p.getName().getString() + " has been promoted to ")
                 .withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(g.displayName).withStyle(Style.EMPTY.withColor(g.color).withBold(true)));

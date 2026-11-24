@@ -1,0 +1,19 @@
+{
+  "parent": "cursedtech:special",
+  "display": {
+    "icon": {
+      "id": "minecraft:nether_star"
+    },
+    "title": "Maximum",
+    "description": "Unleash a Maximum technique",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

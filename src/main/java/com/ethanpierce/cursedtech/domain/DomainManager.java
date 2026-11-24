@@ -144,6 +144,7 @@ public final class DomainManager {
 
         Domain d = new Domain(p, tech, radius, lifetime);
         ACTIVE.put(p.getUUID(), d);
+        com.ethanpierce.cursedtech.core.Advancements.award(p, "domain");
 
         int color = tech.color;
         Component title = Component.literal("Domain Expansion: ").withStyle(Style.EMPTY.withColor(color))

@@ -54,6 +54,7 @@ public final class ServerEvents {
         if (!(e.getEntity() instanceof ServerPlayer p)) return;
         CursedData d = p.getData(ModRegistries.CURSED);
         if (!d.assigned) Progression.awaken(p, d);
+        Advancements.catchUp(p, d);
     }
 
     @SubscribeEvent
@@ -136,6 +137,7 @@ public final class ServerEvents {
         d.energy -= 10;
         d.zoneUntil = l.getGameTime() + 200;
         d.blackFlashes++;
+        Advancements.award(p, "black_flash");
         Progression.addXp(p, d, 30);
 
         // Big but not one-shot: roughly 1.8x a full swing plus a flat bonus.

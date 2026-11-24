@@ -1,0 +1,19 @@
+{
+  "parent": "cursedtech:awakened",
+  "display": {
+    "icon": {
+      "id": "minecraft:black_dye"
+    },
+    "title": "Black Flash",
+    "description": "Land a Black Flash: a perfectly timed strike that distorts space",
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

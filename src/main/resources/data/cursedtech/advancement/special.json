@@ -1,0 +1,19 @@
+{
+  "parent": "cursedtech:grade_1",
+  "display": {
+    "icon": {
+      "id": "minecraft:netherite_sword"
+    },
+    "title": "Special Grade",
+    "description": "Reach Special Grade",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
