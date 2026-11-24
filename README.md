@@ -43,7 +43,7 @@ Requires Java 21 and Gradle 8.14+.
 gradle build
 ```
 
-The jar lands in `build/libs/`. Pushing a `v*` tag builds a GitHub release automatically (see `.github/workflows/release.yml`).
+The jar lands in `build/libs/`. To publish, bump `mod_version` in `gradle.properties` and push to `main`: GitHub Actions builds the jar, creates the `v<version>` release and uploads to CurseForge (see `.github/workflows/release.yml`).
 
 ## License
 
