@@ -57,6 +57,7 @@ public final class DomainManager {
         final int lifetime;
         final List<BlockPos> shell;
         final List<BlockPos> placed = new ArrayList<>();
+        final Map<Long, Boolean> chunkAllowed = new HashMap<>();
         /** Open domains (Calamity) have no barrier: bigger, but targets can run. */
         final boolean open;
         int age;
@@ -187,17 +188,29 @@ public final class DomainManager {
     private static void tickDomain(Domain d, ServerPlayer caster) {
         ServerLevel l = d.level;
 
-        // Build the barrier from the ground up.
+        // Build the barrier from the ground up. Each chunk is checked once with a normal
+        // block-place event, so claim mods can keep barriers out of protected land.
         if (d.age < BUILD_TICKS && !d.open && ServerConfig.DOMAIN_BARRIER.get()) {
             int per = (int) Math.ceil(d.shell.size() / (double) BUILD_TICKS);
             int from = d.age * per;
             for (int i = from; i < Math.min(d.shell.size(), from + per); i++) {
                 BlockPos pos = d.shell.get(i);
                 if (l.isOutsideBuildHeight(pos) || !l.isLoaded(pos)) continue;
-                if (l.getBlockState(pos).isAir()) {
-                    l.setBlock(pos, ModRegistries.DOMAIN_BARRIER.get().defaultBlockState(), 2);
-                    d.placed.add(pos);
+                if (!l.getBlockState(pos).isAir()) continue;
+                long chunk = net.minecraft.world.level.ChunkPos.asLong(pos);
+                Boolean allowed = d.chunkAllowed.get(chunk);
+                if (allowed == Boolean.FALSE) continue;
+                var snapshot = net.neoforged.neoforge.common.util.BlockSnapshot.create(l.dimension(), l, pos);
+                l.setBlock(pos, ModRegistries.DOMAIN_BARRIER.get().defaultBlockState(), 2);
+                if (allowed == null) {
+                    boolean denied = net.neoforged.neoforge.event.EventHooks.onBlockPlace(caster, snapshot, net.minecraft.core.Direction.UP);
+                    d.chunkAllowed.put(chunk, !denied);
+                    if (denied) {
+                        l.setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 2);
+                        continue;
+                    }
                 }
+                d.placed.add(pos);
             }
         }
         if (d.age < BUILD_TICKS) {
@@ -230,7 +243,9 @@ public final class DomainManager {
                 // Event Horizon: everything inside is caught by infinite pull. Frozen briefly, then crawling.
                 // Unbounded Void holds them twice as long.
                 int freeze = d.tech == Technique.UNBOUNDED ? 100 : 60;
+                if (sinceClose % 40 == 0) for (LivingEntity e : inside) Fx.hit(caster, e, 4.0F);
                 for (LivingEntity e : inside) {
+                    if (!Fx.mayAffect(caster, e)) continue; // protected (e.g. claim) or not yet caught
                     boolean frozen = sinceClose < freeze;
                     e.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 30, frozen ? 6 : 2, false, false));
                     e.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 30, 0, false, false));
@@ -240,7 +255,6 @@ public final class DomainManager {
                         e.hurtMarked = true;
                         if (e instanceof Mob m) m.getNavigation().stop();
                     }
-                    if (sinceClose % 40 == 0) Fx.hit(caster, e, 4.0F);
                     if (l.random.nextInt(4) == 0) {
                         Fx.burst(l, ParticleTypes.END_ROD, e.position().add(0, 1, 0), 1, 0.5, 0.02);
                     }
@@ -269,8 +283,7 @@ public final class DomainManager {
                 caster.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 40, 0, false, false));
                 if (sinceClose % 20 == 0) {
                     for (LivingEntity e : inside) {
-                        Fx.hit(caster, e, 2.0F);
-                        e.igniteForSeconds(3);
+                        if (Fx.hit(caster, e, 2.0F)) e.igniteForSeconds(3);
                     }
                 }
                 for (int i = 0; i < 10; i++) {

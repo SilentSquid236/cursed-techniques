@@ -18,7 +18,10 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Vector3f;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /** Shared helpers for damage, targeting, particles and client effects. */
 public final class Fx {
@@ -31,17 +34,52 @@ public final class Fx {
                 .getHolderOrThrow(ModRegistries.TECHNIQUE_DAMAGE), p);
     }
 
+    /**
+     * Who each caster has successfully damaged recently (caster -> entity id -> game tick).
+     * Knockback, pulls, burning and status effects only apply to targets the caster was
+     * actually allowed to hurt. That way claim protection (Open Parties and Claims, FTB
+     * Chunks, ...) or anything else that cancels damage also blocks every side effect.
+     */
+    private static final Map<UUID, Map<Integer, Long>> HARMED = new HashMap<>();
+    private static final int HARM_WINDOW = 60;
+
     /** Technique damage, scaled by config, the caster's grade and their technique's power. */
     public static boolean hit(ServerPlayer p, LivingEntity target, float amount) {
         CursedData d = p.getData(ModRegistries.CURSED);
         target.invulnerableTime = 0;
         float scaled = amount * ServerConfig.DAMAGE_MULTIPLIER.get().floatValue() * d.grade.damageMult * d.technique.power();
-        return target.hurt(source(p), scaled);
+        boolean ok = target.hurt(source(p), scaled);
+        if (ok) HARMED.computeIfAbsent(p.getUUID(), k -> new HashMap<>()).put(target.getId(), p.serverLevel().getGameTime());
+        return ok;
     }
 
+    /** True if this caster landed damage on the target within the last few seconds. */
+    public static boolean mayAffect(ServerPlayer p, Entity target) {
+        Map<Integer, Long> m = HARMED.get(p.getUUID());
+        Long t = m == null ? null : m.get(target.getId());
+        return t != null && p.serverLevel().getGameTime() - t <= HARM_WINDOW;
+    }
+
+    /** Knockback / pull, only if the caster may affect the target. */
+    public static void push(ServerPlayer caster, Entity e, Vec3 v) {
+        if (!mayAffect(caster, e)) return;
+        push(e, v);
+    }
+
+    /** Unconditional push, for the caster's own melee hits that already passed damage checks. */
     public static void push(Entity e, Vec3 v) {
         e.setDeltaMovement(e.getDeltaMovement().add(v));
         e.hurtMarked = true;
+    }
+
+    public static void ignite(ServerPlayer caster, LivingEntity e, float seconds) {
+        if (mayAffect(caster, e)) e.igniteForSeconds(seconds);
+    }
+
+    /** Drop stale entries so the map doesn't grow forever. */
+    public static void cleanup(long now) {
+        HARMED.values().forEach(m -> m.values().removeIf(t -> now - t > HARM_WINDOW));
+        HARMED.values().removeIf(Map::isEmpty);
     }
 
     // -------------------------------------------------------- targeting

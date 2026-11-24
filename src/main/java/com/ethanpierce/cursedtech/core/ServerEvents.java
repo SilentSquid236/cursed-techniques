@@ -79,6 +79,7 @@ public final class ServerEvents {
     public static void onServerTick(ServerTickEvent.Post e) {
         Tasks.tickAll();
         DomainManager.tick();
+        if (e.getServer().getTickCount() % 200 == 0) Fx.cleanup(e.getServer().overworld().getGameTime());
     }
 
     @SubscribeEvent
@@ -124,8 +125,13 @@ public final class ServerEvents {
     }
 
     @SubscribeEvent
-    public static void onIncomingDamage(LivingIncomingDamageEvent e) {
+    public static void onIncomingDamageInfinity(LivingIncomingDamageEvent e) {
         infinity(e);
+    }
+
+    /** Lowest priority: only runs if claim protection etc. didn't cancel the hit. */
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST)
+    public static void onIncomingDamage(LivingIncomingDamageEvent e) {
         if (!(e.getSource().getDirectEntity() instanceof ServerPlayer p) || e.getSource().getEntity() != p) return;
         if (!e.getSource().is(DamageTypes.PLAYER_ATTACK)) return;
         Long tick = PENDING_FLASH.remove(p.getUUID());

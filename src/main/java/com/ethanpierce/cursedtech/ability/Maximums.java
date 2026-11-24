@@ -55,8 +55,9 @@ public final class Maximums {
             Fx.sphere(level, ParticleTypes.REVERSE_PORTAL, point, 3.5 - age * 0.05, 30);
             Fx.sphere(level, Fx.dust(t.dust(), 2.5F), point, 1.0 + level.random.nextDouble(), 8);
             for (LivingEntity e : Fx.around(p, point, 11)) {
+                if (!Fx.mayAffect(p, e)) { if (age % 8 == 0) Fx.hit(p, e, 0.5F); continue; }
                 Vec3 to = point.subtract(e.position().add(0, e.getBbHeight() / 2, 0));
-                Fx.push(e, to.normalize().scale(Math.min(0.45, 1.4 / Math.max(0.8, to.length()))));
+                Fx.push(p, e, to.normalize().scale(Math.min(0.45, 1.4 / Math.max(0.8, to.length()))));
                 e.fallDistance = 0;
                 if (age % 10 == 0 && to.length() < 4) Fx.hit(p, e, 2.0F);
             }
@@ -101,7 +102,7 @@ public final class Maximums {
                         e -> Fx.validTarget(p, e))) {
                     if (hit.add(e)) {
                         Fx.hit(p, e, 14.0F);
-                        Fx.push(e, look.scale(0.8).add(0, 0.4, 0));
+                        Fx.push(p, e, look.scale(0.8).add(0, 0.4, 0));
                     }
                 }
             }
@@ -137,9 +138,9 @@ public final class Maximums {
             for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, new AABB(c, c).inflate(6, 4, 6),
                     e -> Fx.validTarget(p, e) && e.position().distanceTo(c) <= 6.5)) {
                 Fx.hit(p, e, 14.0F);
-                e.igniteForSeconds(6);
+                Fx.ignite(p, e, 6);
                 Vec3 away = e.position().subtract(c).multiply(1, 0, 1);
-                Fx.push(e, (away.lengthSqr() < 1e-4 ? new Vec3(0, 0, 0) : away.normalize().scale(1.2)).add(0, 0.8, 0));
+                Fx.push(p, e, (away.lengthSqr() < 1e-4 ? new Vec3(0, 0, 0) : away.normalize().scale(1.2)).add(0, 0.8, 0));
             }
             Fx.burst(level, ParticleTypes.EXPLOSION_EMITTER, c.add(0, 1, 0), 2, 1.5, 0);
             Fx.burst(level, ParticleTypes.FLAME, c.add(0, 1, 0), 120, 2.5, 0.25);
@@ -188,7 +189,7 @@ public final class Maximums {
             for (LivingEntity e : in) {
                 if (hit.add(e)) {
                     Fx.hit(p, e, 16.0F);
-                    Fx.push(e, dir[0].scale(1.5).add(0, 0.3, 0));
+                    Fx.push(p, e, dir[0].scale(1.5).add(0, 0.3, 0));
                 }
             }
             return age >= 18 + 45;
@@ -226,8 +227,8 @@ public final class Maximums {
                     Vec3 at = wall.getType() != HitResult.Type.MISS ? wall.getLocation() : next;
                     for (LivingEntity e : Fx.around(p, at, 5.5)) {
                         Fx.hit(p, e, 14.0F);
-                        e.igniteForSeconds(8);
-                        Fx.push(e, e.position().subtract(at).normalize().scale(1.0).add(0, 0.5, 0));
+                        Fx.ignite(p, e, 8);
+                        Fx.push(p, e, e.position().subtract(at).normalize().scale(1.0).add(0, 0.5, 0));
                     }
                     Fx.burst(level, ParticleTypes.EXPLOSION_EMITTER, at, 1, 0, 0);
                     Fx.burst(level, ParticleTypes.FLAME, at, 150, 2.0, 0.3);

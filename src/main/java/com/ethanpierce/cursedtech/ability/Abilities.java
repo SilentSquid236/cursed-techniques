@@ -107,9 +107,11 @@ public final class Abilities {
             Fx.sphere(level, ParticleTypes.REVERSE_PORTAL, point, 1.2 - age * 0.04, 10);
             Fx.burst(level, Fx.dust(t.dust(), 1.4F), point, 4, 0.25, 0);
             for (LivingEntity e : Fx.around(p, point, 6.5)) {
+                // A light grip first: the pull only takes hold of things the caster may hurt.
+                if (!Fx.mayAffect(p, e)) { if (age % 8 == 0) Fx.hit(p, e, 0.5F); continue; }
                 Vec3 to = point.subtract(e.position().add(0, e.getBbHeight() / 2, 0));
                 double dist = Math.max(0.6, to.length());
-                Fx.push(e, to.normalize().scale(Math.min(0.32, 0.9 / dist)));
+                Fx.push(p, e, to.normalize().scale(Math.min(0.32, 0.9 / dist)));
                 e.fallDistance = 0;
             }
             if (age >= 24) {
@@ -133,7 +135,7 @@ public final class Abilities {
             Vec3 away = e.position().subtract(p.position()).multiply(1, 0, 1);
             if (away.lengthSqr() < 1e-4) away = p.getLookAngle().multiply(1, 0, 1);
             Fx.hit(p, e, 6.0F);
-            Fx.push(e, away.normalize().scale(1.7).add(0, 0.55, 0));
+            Fx.push(p, e, away.normalize().scale(1.7).add(0, 0.55, 0));
         }
         l.playSound(null, c.x, c.y, c.z, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.0F, 1.4F);
         Tasks.start(l, (level, age) -> {
@@ -231,7 +233,7 @@ public final class Abilities {
                 if (!hits.isEmpty()) {
                     LivingEntity e = hits.get(0);
                     Fx.hit(p, e, 5.0F);
-                    e.igniteForSeconds(4);
+                    Fx.ignite(p, e, 4);
                     Fx.burst(level, ParticleTypes.LAVA, next, 6, 0.2, 0);
                     Fx.burst(level, ParticleTypes.FLAME, next, 20, 0.2, 0.08);
                     level.playSound(null, next.x, next.y, next.z, SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
@@ -271,8 +273,8 @@ public final class Abilities {
                     new AABB(c.x - 3.5, c.y - 1, c.z - 3.5, c.x + 3.5, c.y + 4, c.z + 3.5),
                     e -> Fx.validTarget(p, e) && e.position().multiply(1, 0, 1).distanceTo(c.multiply(1, 0, 1)) <= 3.5)) {
                 Fx.hit(p, e, 8.0F);
-                e.igniteForSeconds(3);
-                Fx.push(e, new Vec3(0, 0.9, 0));
+                Fx.ignite(p, e, 3);
+                Fx.push(p, e, new Vec3(0, 0.9, 0));
             }
             for (int i = 0; i < 5; i++) {
                 Vec3 col = c.add(0, i * 0.8, 0);

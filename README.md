@@ -44,6 +44,10 @@ The ~1% of players who awaken as a Special Grade receive a technique nobody else
 - Black Flash: side-on shot of both fighters, inverted-color impact frame, screen shake.
 - All of it is optional per player: *Mods > Cursed Techniques > Config* (camera shots, impact frames, screen shake, HUD). Impact frames flash; turn them off if flashing lights bother you.
 
+## Claims and protection
+
+Techniques play by the same rules as normal attacks. Knockback, pulls, burning, freezes and other effects only land on targets the caster was actually allowed to damage, so claim mods (Open Parties and Claims, FTB Chunks, ...) that block PvP or entity damage block techniques and domains too. Domain barriers fire a normal block-place check per chunk and skip protected land.
+
 ## Commands
 
 | Command | Permission |
