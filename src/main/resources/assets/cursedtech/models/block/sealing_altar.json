@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "cursedtech:block/sealing_altar_top",
+    "side": "cursedtech:block/sealing_altar_side",
+    "bottom": "minecraft:block/obsidian"
+  }
+}

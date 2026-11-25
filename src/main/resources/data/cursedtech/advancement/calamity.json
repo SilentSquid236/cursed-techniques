@@ -1,0 +1,13 @@
+{
+  "parent": "cursedtech:special",
+  "display": {
+    "icon": { "id": "cursedtech:calamity_heart" },
+    "title": "Seal the Calamity",
+    "description": "Defeat the Calamity, the sorcerer sealed beneath the world",
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": { "done": { "trigger": "minecraft:impossible" } }
+}

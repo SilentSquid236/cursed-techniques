@@ -176,7 +176,8 @@ public final class ServerEvents {
         if (d.technique != Technique.UNBOUNDED || d.energy < 10) return;
         if (e.getSource().getEntity() == null || e.getSource().getEntity() == p) return;
         if (d.burnoutUntil > p.serverLevel().getGameTime()) return;
-        if (e.getSource().is(ModRegistries.TECHNIQUE_DAMAGE) && DomainManager.isInEnemyDomain(p)) return;
+        if (e.getSource().is(ModRegistries.TECHNIQUE_DAMAGE)
+                && (DomainManager.isInEnemyDomain(p) || com.ethanpierce.cursedtech.entity.CalamityEntity.inSureHit(p))) return;
         float blocked = e.getAmount() * 0.6F;
         e.setAmount(e.getAmount() - blocked);
         d.energy = Math.max(0, d.energy - blocked * 1.5F);

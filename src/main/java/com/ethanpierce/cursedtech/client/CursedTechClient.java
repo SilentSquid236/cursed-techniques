@@ -17,6 +17,8 @@ public class CursedTechClient {
         container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         modBus.addListener(ClientEvents::registerKeys);
         modBus.addListener(Hud::register);
+        modBus.addListener((net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers e) ->
+                e.registerEntityRenderer(com.ethanpierce.cursedtech.core.ModRegistries.CALAMITY.get(), CalamityRenderer::new));
         NeoForge.EVENT_BUS.register(ClientEvents.class);
     }
 }

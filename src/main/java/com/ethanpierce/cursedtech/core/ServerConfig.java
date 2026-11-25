@@ -69,5 +69,27 @@ public final class ServerConfig {
 
     static { B.pop(); }
 
+    // ------------------------------------------------------------- the Calamity
+
+    static { B.push("calamity"); }
+
+    public static final ModConfigSpec.DoubleValue CALAMITY_HEALTH = B
+            .comment("Max health of the Calamity boss when summoned at a Sealing Altar.")
+            .defineInRange("health", 600.0, 50.0, 100000.0);
+    public static final ModConfigSpec.DoubleValue CALAMITY_DAMAGE = B
+            .comment("Multiplies the Calamity's technique and domain damage.")
+            .defineInRange("damageMultiplier", 1.0, 0.0, 20.0);
+    public static final ModConfigSpec.ConfigValue<String> SUMMON_ITEM = B
+            .comment("Item used on a Sealing Altar to summon the Calamity. Falls back to a Nether Star if this item doesn't exist.")
+            .define("summonItem", "draconicevolution:chaotic_core");
+    public static final ModConfigSpec.BooleanValue CONSUME_SUMMON_ITEM = B
+            .comment("Use up the summon item. Off by default: the seal is needed again to finish the story.")
+            .define("consumeSummonItem", false);
+    public static final ModConfigSpec.IntValue ALTAR_COOLDOWN_SECONDS = B
+            .comment("Seconds before the same altar can summon again.")
+            .defineInRange("altarCooldownSeconds", 1200, 0, 86400);
+
+    static { B.pop(); }
+
     public static final ModConfigSpec SPEC = B.build();
 }

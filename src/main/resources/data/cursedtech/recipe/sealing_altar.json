@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [ "ACA", "OSO", "OOO" ],
+  "key": {
+    "A": { "item": "minecraft:amethyst_block" },
+    "C": { "item": "minecraft:crying_obsidian" },
+    "S": { "item": "minecraft:nether_star" },
+    "O": { "item": "minecraft:obsidian" }
+  },
+  "result": { "id": "cursedtech:sealing_altar", "count": 1 }
+}

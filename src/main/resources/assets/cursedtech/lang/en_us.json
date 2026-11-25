@@ -11,5 +11,9 @@
   "cursedtech.configuration.impactFrames": "Impact frames (screen flashes)",
   "cursedtech.configuration.screenShake": "Screen shake",
   "cursedtech.configuration.showHud": "Show cursed energy HUD",
-  "key.cursedtech.maximum": "Maximum Technique"
+  "key.cursedtech.maximum": "Maximum Technique",
+  "entity.cursedtech.calamity": "The Calamity",
+  "block.cursedtech.sealing_altar": "Sealing Altar",
+  "item.cursedtech.calamity_heart": "Heart of the Calamity",
+  "item.cursedtech.calamity_spawn_egg": "The Calamity Spawn Egg"
 }
